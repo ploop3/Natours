@@ -1,0 +1,19 @@
+### Get all tours
+GET http://localhost:3000/api/v1/tours
+
+### Get only one tour
+GET http://localhost:3000/api/v1/tours/16
+
+### get all users
+GET  http://localhost:3000/api/v1/users
+
+### Create a tour
+POST http://localhost:3000/api/v1/tours
+Content-Type: application/json
+
+{ 
+    "name": "Test tour",
+    "duration": 10,
+    "difficulty": "easy",
+    "price": 55 
+}
