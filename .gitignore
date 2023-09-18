@@ -125,7 +125,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
+*.env
 .env.development.local
 .env.test.local
 .env.production.local
@@ -233,5 +233,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# REST Client files
+*.http
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node,windows,macos,linux
