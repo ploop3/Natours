@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Tour = require('../../models/tourModel');
 
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: '../../config.env' });
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
@@ -42,6 +42,10 @@ const deleteData = async () => {
   }
   process.exit();
 };
+
+// will be executed based on the command:
+//> node import-dev-data.js --import
+//> node import-dev-data.js --delete
 
 if (process.argv[2] === '--import') {
   importData();
