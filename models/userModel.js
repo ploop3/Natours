@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password'],
     minLength: 8,
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -34,11 +35,15 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-//Encrypt the password
-//Happens between the moment we receive the data
-//and the moment when it is 'saved' in the DB
+/**
+ * Encrypt the password
+ *
+ * Happens between the moment we receive the data and the moment when it is 'saved' in the DB
+ */
+
 userSchema.pre('save', async function (next) {
   //Only run if password was modified
+  //this = the current document/user
   if (!this.isModified('password')) return next();
 
   //Hash the password with cost of 12
@@ -48,6 +53,25 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+/**
+ * Compare passwords using an instance method
+ *
+ * Instance method = Method available in all documents(all users) of a certain collection
+ *
+ *
+ * We can't use 'this.password' because we chose to hide the password (select = false),
+ * unless we manually selected (+password)
+ *
+ * That's why we have to pass both passwords to the function.
+ */
+
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword,
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 
