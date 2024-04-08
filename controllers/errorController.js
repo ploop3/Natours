@@ -5,11 +5,17 @@ const handleCastErrorDB = (err) => {
   return new AppError(message, 400);
 };
 
-const handleDuplicateFieldsDB = (err) => {
-  const value = err.errmsg.match(/(["'](\\?.))*?\1/)[0];
-  console.log(value);
+/**
+ * If we want to create a DB record with a unique property that's already in use
+ * Example: A second tour with a repeated name
+ */
 
-  const message = `Duplicate field value ${err.value}. Please use another value`;
+const handleDuplicateFieldsDB = (err) => {
+  //err.errmsg: string = "E1100 duplicate key.... key: { \"TOUR TITLE\" }"
+  //We need to extract only "TOUR TITLE" (Google: Match the only text between quotes)
+  const value = err.errmsg.match(/(["'](\\?.))*?\1/)[0];
+
+  const message = `Duplicate field value: ${value}. Please use another value`;
   return new AppError(message, 400);
 };
 const handleValidationErrorDB = (err) => {

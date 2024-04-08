@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -15,7 +16,11 @@ const userSchema = new mongoose.Schema({
     validate: [validator.isEmail, 'Provide a valid email'],
   },
   photo: String,
-
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
+  },
   password: {
     type: String,
     required: [true, 'Please provide a password'],
@@ -30,16 +35,18 @@ const userSchema = new mongoose.Schema({
       validator: function (el) {
         return el === this.password;
       },
+      message: 'Passwords are not the same',
     },
-    message: 'Passwords are not the same',
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 /**
  * Encrypt the password
  *
- * Happens between the moment we receive the data and the moment when it is 'saved' in the DB
+ *  .pre() means that it happens between the moment we receive the data and the moment when it is 'saved' in the DB
  */
 
 userSchema.pre('save', async function (next) {
@@ -52,6 +59,17 @@ userSchema.pre('save', async function (next) {
 
   //remove from the database since we won't need it anymore
   this.passwordConfirm = undefined;
+  next();
+});
+
+//If we modify the password, it will automatically modify the property "passwordChangedAt"
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  //Sometimes the signin token is created before 'passwordChangedAt', making the token invalid
+  //because of our checking code.
+  //One solution is to simply rest one second
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
@@ -87,12 +105,24 @@ userSchema.methods.changedPasswordAfter = function (JTWTimestamp) {
       this.passwordChangedAt.getTime() / 1000,
       10,
     );
-    console.log(changedTimestamp, JTWTimestamp);
     //If the token was created at second 300 and the passoword was changed before at second 200
     //(300 < 200) will return FALSE = the password was not changed after token created
     return JTWTimestamp < changedTimestamp;
   }
   return false;
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  //The user will have 10 minutes to reset the password
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);
