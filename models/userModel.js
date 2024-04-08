@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false, //to show it in the user properties only if explicitly requested +active
+  },
 });
 
 /**
@@ -70,6 +75,19 @@ userSchema.pre('save', function (next) {
   //because of our checking code.
   //One solution is to simply rest one second
   this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+/**
+ * Query middleware.
+ * Run whenever we query an user using any method that starts with '/^find/'
+ * The goal is to hide the users where "active = false"
+ */
+
+userSchema.pre(/^find/, function (next) {
+  //this points to the current query
+  //Will return all documents where active is '$not equal' to false
+  this.find({ active: { $ne: false } });
   next();
 });
 
