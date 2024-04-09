@@ -45,7 +45,24 @@ exports.getTour = catchAsync(async (req, res, next) => {
 });
 
 exports.createTour = catchAsync(async (req, res, next) => {
-  const newTour = await Tour.create(req.body);
+  const newTour = await Tour.create({
+    name: req.body.name,
+    duration: req.body.duration,
+    maxGroupSize: req.body.maxGroupSize,
+    difficulty: req.body.difficulty,
+    ratingsAverage: req.body.ratingsAverage,
+    ratingsQuantity: req.body.ratingsQuantity,
+    price: req.body.price,
+    summary: req.body.summary,
+    imageCover: req.body.imageCover,
+    images: req.body.images,
+    startDates: req.body.startDates,
+    startLocation: req.body.startLocation,
+    guides: req.body.guides,
+    locations: req.body.locations,
+  });
+
+  // const newTour = await Tour.create(req.body);
   res.status(201).json({
     status: 'success',
     data: {
