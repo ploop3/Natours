@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const User = require('./userModel');
+// const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -83,7 +83,7 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
-    guides: Array,
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   {
     toJSON: { virtuals: true },
@@ -104,13 +104,27 @@ tourSchema.virtual('durationWeeks').get(function () {
 // });
 
 /**
+ * Embedding
  * When the client creates a tour it provides an array guides that contain the IDs of the guides
- * We will then convert it to an array of User documents
+ * We will then convert it to an array of User documents and embed it to the Tour document
+ *
+ * Not efficient enough for our purposes, so we will use child referencing
  */
-tourSchema.pre('save', async function (next) {
-  const guidesPromises = this.guides.map(async (id) => await User.findById(id));
-  this.guides = await Promise.all(guidesPromises);
-  console.log(this.guides);
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+//   console.log(this.guides);
+//   next();
+// });
+
+/**
+ * QUERY MIDDLEWARES
+ */
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
 
