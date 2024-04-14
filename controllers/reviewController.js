@@ -1,30 +1,7 @@
 const Review = require('../models/reviewModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-
-exports.createReview = catchAsync(async (req, res, next) => {
-  //Allow nested routes in case the user does not provide user and tour in the body.
-  //We get them from the URL and the logged user(protect middleware)
-  if (!req.body.tour) req.body.tour = req.params.tourId;
-  if (!req.body.user) req.body.user = req.user.id;
-
-  // 1) Extract authenticated user
-  console.log('user assigned: ***', req.body.user);
-
-  const newReview = await Review.create({
-    review: req.body.review,
-    rating: req.body.rating,
-    tour: req.body.tour,
-    user: req.body.user,
-  });
-
-  res.status(201).json({
-    status: 'success',
-    data: {
-      review: newReview,
-    },
-  });
-});
+const factory = require('./handleFactory');
 
 exports.getReview = catchAsync(async (req, res, next) => {
   console.log('ID:', req.params.id);
@@ -57,3 +34,22 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.setTourUserIds = (req, res, next) => {
+  //Allow nested routes in case the user does not provide user and tour in the body.
+  //We get them from the URL and the logged user(protect middleware)
+  if (!req.body.tour) req.body.tour = req.params.tourId;
+  if (!req.body.user) req.body.user = req.user.id;
+
+  req.body = {
+    review: req.body.review,
+    rating: req.body.rating,
+    tour: req.body.tour,
+    user: req.body.user,
+  };
+  next();
+};
+
+exports.createReview = factory.createOne(Review);
+exports.updateReview = factory.updateOne(Review);
+exports.deleteReview = factory.deleteOne(Review);
