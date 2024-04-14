@@ -1,12 +1,21 @@
 const express = require('express');
 const tourController = require('../controllers/tourContoller');
 const authController = require('../controllers/authController');
+const reviewRouter = require('./../routes/reviewRoutes');
 
 /**
  * Routes
  */
 
 const router = express.Router();
+
+/**
+ * Nested Routes
+ */
+
+//If we encounter this route, use the reviewRouter instead
+//The app.js redirect them here, because of the /tours/, but we are now redirecting them to reviewRouter
+router.use('/:tourId/reviews', reviewRouter);
 
 // router.param('id', tourController.checkID);
 

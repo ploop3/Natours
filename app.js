@@ -8,8 +8,10 @@ const hpp = require('hpp');
 
 const globalErrorHandler = require('./controllers/errorController');
 const AppError = require('./utils/appError');
+
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 //Will add a bunch of methods to our app variable
 const app = express();
@@ -75,6 +77,7 @@ app.use(express.static(`${__dirname}/public/`));
 // 2) ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // 3) Capture errors
 //Middleware to caputure unhandled routes.
