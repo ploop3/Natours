@@ -21,25 +21,10 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 /**
- * Route andlers
+ * Route handlers
  */
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
-
-  //Send response
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
-    data: {
-      users,
-    },
-  });
-});
-
-/**
- * Update only your own name and email address
- */
+//Update only your own name and email address
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) Create error is user POSTs password data
   if (req.body.password || req.body.passwordConfirm) {
@@ -84,14 +69,16 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getUser = (req, res) => {
+exports.createUser = (req, res) => {
   res.status(500).json({
     status: 'error',
-    message: 'This route is not defined yet',
+    message: 'This route is not defined! Please use /signup instead',
   });
 };
 
 //Only for admins, and to update data that's not the password (email, name, role)
 exports.updateUser = factory.updateOne(User);
 
+exports.getUser = factory.getOne(User);
+exports.getAllUsers = factory.getAll(User);
 exports.deleteUser = factory.deleteOne(User);
