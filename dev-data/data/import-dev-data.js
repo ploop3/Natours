@@ -2,14 +2,18 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Tour = require('../../models/tourModel');
+const Review = require('../../models/reviewModel');
+const User = require('../../models/userModel');
 
 dotenv.config({ path: '../../config.env' });
 
-const DB = process.env.DATABASE.replace(
+let DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.PASSWORD_DATABASE,
 );
+DB = DB.replace('<USERNAME>', process.env.USERNAME_DATABASE);
 
+console.log(DB);
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
@@ -17,14 +21,20 @@ mongoose
   .then(() => console.log('DB connection successful'));
 
 //Read JSON file
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8'),
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
+const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'));
+const reviews = JSON.parse(
+  fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'),
 );
 
 //Import data into DB
 const importData = async () => {
   try {
     await Tour.create(tours);
+    //Skip password encryption by temporarily commenting the middlewares in userModel.js
+    //Skip validation because we are not providing passwordConfirm (frontend param only)
+    await User.create(users, { validateBeforeSave: false });
+    await Review.create(reviews);
     console.log('Data successfully loaded!');
   } catch (error) {
     console.log(error);
@@ -36,6 +46,8 @@ const importData = async () => {
 const deleteData = async () => {
   try {
     await Tour.deleteMany({});
+    await Review.deleteMany({});
+    await User.deleteMany({});
     console.log('Data successfully removed!');
   } catch (error) {
     console.log(error);
