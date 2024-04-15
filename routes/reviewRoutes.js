@@ -9,11 +9,14 @@ const router = express.Router({ mergeParams: true });
 // GET /tour/idTourxxx/reviews  --Get All Reviews from that tourID
 // POST /reviews
 
-//Only 'user' users can create reviews, no 'admin' nor 'guide'
+//Authentication: All actions related to reviews must be protected
+router.use(authController.protect);
+
+//Authorization: Only 'user' users can create reviews, no 'admin' nor 'guide'
+//Only 'user' and 'admin' can delete or update reviews
 router
   .route('/')
   .post(
-    authController.protect,
     authController.restrictTo('user'),
     reviewController.setTourUserIds,
     reviewController.createReview,
@@ -24,10 +27,12 @@ router
   .route('/:id')
   .get(reviewController.getReview)
   .delete(
-    authController.protect,
-    authController.restrictTo('admin'),
+    authController.restrictTo('user', 'admin'),
     reviewController.deleteReview,
   )
-  .patch(authController.protect, reviewController.updateReview);
+  .patch(
+    authController.restrictTo('user', 'admin'),
+    reviewController.updateReview,
+  );
 
 module.exports = router;

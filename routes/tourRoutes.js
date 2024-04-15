@@ -24,14 +24,24 @@ router
   .get(tourController.aliasTopTours, tourController.getAllTours);
 
 router.route('/tour-stats').get(tourController.getTourStats);
-router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+
+router
+  .route('/monthly-plan/:year')
+  .get(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide', 'guide'),
+    tourController.getMonthlyPlan,
+  );
+
+//getAll tours is open for everyone
+//Creating, editing and deleting a tour is restricted
 
 router
   .route('/')
-  .get(authController.protect, tourController.getAllTours)
+  .get(tourController.getAllTours)
   .post(
     authController.protect,
-    authController.restrictTo('guide', 'admin'),
+    authController.restrictTo('admin', 'lead-guide'),
     tourController.sanitizeTourBody,
     tourController.createTour,
   );
@@ -39,7 +49,11 @@ router
 router
   .route('/:id')
   .get(tourController.getTour)
-  .patch(tourController.updateTour)
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.updateTour,
+  )
   .delete(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
