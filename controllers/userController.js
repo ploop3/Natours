@@ -24,6 +24,12 @@ const filterObj = (obj, ...allowedFields) => {
  * Route handlers
  */
 
+//Middleware needed bc getOne uses req.params.id
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
 //Update only your own name and email address
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) Create error is user POSTs password data

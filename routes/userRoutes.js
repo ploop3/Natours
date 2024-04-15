@@ -4,6 +4,7 @@ const authController = require('../controllers/authController');
 
 /**
  * Routes
+ * authController.protect will add the logged user to the request object
  */
 
 const router = express.Router();
@@ -17,6 +18,13 @@ router.patch(
   '/updateMyPassword',
   authController.protect,
   authController.updatePassword,
+);
+
+router.get(
+  '/me',
+  authController.protect,
+  userController.getMe,
+  userController.getUser,
 );
 router.patch('/updateMe', authController.protect, userController.updateMe);
 router.delete('/deleteMe', authController.protect, userController.deleteMe);
