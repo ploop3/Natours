@@ -85,6 +85,7 @@ exports.getAll = (Model) => {
       .paginate();
 
     //Execute the query
+    // const doc = await features.mongooseQuery.explain();
     const doc = await features.mongooseQuery;
 
     //Send response
