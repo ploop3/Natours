@@ -38,6 +38,13 @@ const reviewSchema = new mongoose.Schema(
 );
 
 /**
+ * Index
+ * To prevent duplicated reviews from a single user
+ * An user can only create one review per tour
+ */
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
+/**
  * QUERY MIDDLEWARES
  */
 reviewSchema.pre(/^find/, function (next) {
@@ -115,7 +122,10 @@ reviewSchema.pre(/^findOneAnd/, async function (next) {
 //4.2 After the query has finished (post), we now push the new data to the Tour
 reviewSchema.post(/^findOneAnd/, async function () {
   //this.r is the current Document, not the query
-  await this.r.constructor.calcAverageRatings(this.r.tour);
+  //If not found, it will be null
+  if (this.r !== null) {
+    await this.r.constructor.calcAverageRatings(this.r.tour);
+  }
 });
 
 const Review = mongoose.model('Review', reviewSchema);
