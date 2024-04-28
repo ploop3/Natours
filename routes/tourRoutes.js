@@ -33,9 +33,16 @@ router
     tourController.getMonthlyPlan,
   );
 
+// Route using query string: /tours-within&distance=300&center-40,45&unit=mi
+//Toute using query params: /tours-within/233/center/-40,45/unit/mi
+router
+  .route('/tours-within/:distance/center/:latlng/unit:unit')
+  .get(tourController.getToursWithin);
+
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistances);
+
 //getAll tours is open for everyone
 //Creating, editing and deleting a tour is restricted
-
 router
   .route('/')
   .get(tourController.getAllTours)

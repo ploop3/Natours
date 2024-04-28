@@ -1,6 +1,6 @@
 const Tour = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
-// const AppError = require('../utils/appError');
+const AppError = require('../utils/appError');
 const factory = require('./handleFactory');
 
 /**
@@ -125,3 +125,91 @@ exports.getTour = factory.getOne(Tour, { path: 'reviews' });
 exports.updateTour = factory.updateOne(Tour);
 
 exports.deleteTour = factory.deleteOne(Tour);
+
+/**
+ * The goal is to get find available tours within a distance radius
+ * The user will provide the starting point, the radius and units(km, mi)
+ *
+ * Example of requests:
+ * /tours-within/:distance/center/:latlng/unit:unit
+ * /tours-within/200/center/34.111745,-118.113491/unit:mi
+ */
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  //Mongo db requires the radius pass in units called radiants
+  // radiants = distance / radius of the hearth
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitud and longitude in the format lat,lng',
+        400,
+      ),
+    );
+  }
+
+  //GeoSpacial queries
+  //$centerSphere takes an array with the coordinates and the radius
+  const tours = await Tour.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      data: tours,
+    },
+  });
+});
+
+//Calculate the distance from an specific point to the tours
+exports.getDistances = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  //handle miles vs kms
+  //Google: 1 meter in miles = 0.0006213712
+  const multiplier = unit === 'mi' ? 0.0006213712 : 0.001;
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitud and longitude in the format lat,lng',
+        400,
+      ),
+    );
+  }
+
+  //Will return the distances from 'near' to the 'startingPoint' Index of all tours
+  //The 'distance' field will be added to the tour, which will contain the distance between the point given ('near') to this tour
+  //The result will be given in meters
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [Number(lng), Number(lat)],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier, //To convert meters to KMs or Miles
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: distances,
+    },
+  });
+});
