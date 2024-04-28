@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const path = require('path');
 
 const globalErrorHandler = require('./controllers/errorController');
 const AppError = require('./utils/appError');
@@ -16,7 +17,13 @@ const reviewRouter = require('./routes/reviewRoutes');
 //Will add a bunch of methods to our app variable
 const app = express();
 
+//Frontend: Template engine pug
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 // 1) GLOBAL Middlewares
+//Serving static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 //Set security HTTP headers
 app.use(helmet());
@@ -71,10 +78,14 @@ app.use(
   }),
 );
 
-//Serving static files
-app.use(express.static(`${__dirname}/public/`));
-
 // 2) ROUTES
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    tour: 'The Forest Hiker',
+    user: 'Jonas',
+  });
+});
+
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

@@ -11,7 +11,12 @@ PASSWORD_DATABASE=
 JWT_SECRET=euirtjvmmwqop_@!skdpc
 JWT_EXPIRES_IN=30d
 
+EMAIL_USERNAME=
+EMAIL_PASSWORD=
+EMAIL_HOST=...mailtrap.io
+EMAIL_PORT=
 
 ##  Run the app
 
+`npm install`
 `npm start`

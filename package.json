@@ -21,10 +21,12 @@
     "mongoose": "^7.5.0",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.13",
+    "pug": "^3.0.2",
     "validator": "^13.11.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@prettier/plugin-pug": "^3.0.0",
     "eslint": "^8.48.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.0.0",
@@ -34,7 +36,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-react": "^7.33.2",
     "nodemon": "^3.0.1",
-    "prettier": "^3.0.3"
+    "prettier": "^3.2.5"
   },
   "engines": {
     "node": ">=10.6.0"
