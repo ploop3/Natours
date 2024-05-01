@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
+const validator = require('validator');
 // const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
@@ -7,7 +9,12 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A tour must have a name'],
       unique: true,
+      trim: true,
+      maxlength: [40, 'A tour must have more or equal than 40 characters'],
+      minlength: [10, 'A tour must have more or equal than 10 characters'],
+      // validate: [validator.isAlpha, 'Tour name must only contain characters']
     },
+    slug: String,
     duration: {
       type: Number,
       required: [true, 'A tour must have a duration'],
@@ -19,6 +26,10 @@ const tourSchema = new mongoose.Schema(
     difficulty: {
       type: String,
       required: [true, 'A tour must have a difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficult is either: easy, medium or difficult',
+      },
     },
     ratingsAverage: {
       type: Number,
@@ -36,7 +47,15 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'A tour must have a price'],
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be lower than normal price',
+      },
+    },
     summary: {
       type: String,
       trim: true,
@@ -115,10 +134,10 @@ tourSchema.virtual('reviews', {
 /**
  * DOCUMENT MIDDLEWARE: runs before .save() and .create()
  */
-// tourSchema.pre('save', function (next) {
-//   this.slug = slugify(this.name, { lower: true });
-//   next();
-// });
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
 
 /**
  * Embedding
@@ -136,13 +155,30 @@ tourSchema.virtual('reviews', {
 
 /**
  * QUERY MIDDLEWARES
+ *
+ * Remove the secret tours when querying data
  */
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
     select: '-__v -passwordChangedAt',
   });
   next();
+});
+
+/**
+ * AGGREGATION MIDDLEWARE
+ *
+ * Remove all secret tours from the output when we use aggregate pipes
+ */
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  console.log;
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
