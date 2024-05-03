@@ -129,6 +129,37 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 /**
+ * Only for rendered pages(frontend), no error
+ */
+
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  if (req.cookies.jwt) {
+    //1) Verification token
+    const payload = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET,
+    );
+
+    //2) Check if the user still exists
+    const freshUser = await User.findById(payload.id);
+
+    if (!freshUser) {
+      return next();
+    }
+
+    //3) Check if the user changed password after the token was issued
+    if (freshUser.changedPasswordAfter(payload.iat)) {
+      return next();
+    }
+
+    //There is a logged in user
+    res.locals.user = freshUser;
+    return next();
+  }
+  next();
+});
+
+/**
  * The middlewares do not accept arguments(must be req, res, next) but we need to pass the
  * roles
  * The solution is to create an annonymous wrapper function that will return the middleware function
