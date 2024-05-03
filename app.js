@@ -6,6 +6,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const globalErrorHandler = require('./controllers/errorController');
 const AppError = require('./utils/appError');
@@ -13,7 +14,7 @@ const AppError = require('./utils/appError');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
-const viewRouter = require('./routes/viewRoutes')
+const viewRouter = require('./routes/viewRoutes');
 
 //Will add a bunch of methods to our app variable
 const app = express();
@@ -27,7 +28,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //Set security HTTP headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy:
+      process.env.NODE_ENV === 'production' ? undefined : false,
+  }),
+);
 
 //Development logging
 if (process.env.NODE_ENV === 'development') {
@@ -57,6 +63,9 @@ app.use(
   }),
 );
 
+//cookieParser will add the cookies into req.cookies
+app.use(cookieParser());
+
 //Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
@@ -80,9 +89,8 @@ app.use(
 );
 
 // 2) ROUTES
-  //Mount view routes to the app
-app.use('/', viewRouter)
-
+//Mount view routes to the app
+app.use('/', viewRouter);
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);

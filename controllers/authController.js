@@ -74,6 +74,10 @@ exports.login = catchAsync(async (req, res, next) => {
   createAndSendToken(user, 200, res);
 });
 
+/**
+ * Used in all routes that require authentication
+ * It will do this check every time you access
+ */
 exports.protect = catchAsync(async (req, res, next) => {
   //1) Get the token and check if it exists
 
@@ -83,6 +87,11 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else {
+    //Get the token from the client cookie
+    if (req.cookies.jwt) {
+      token = req.cookies.jwt;
+    }
   }
 
   if (!token) {
