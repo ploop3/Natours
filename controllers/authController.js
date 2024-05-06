@@ -22,7 +22,7 @@ const createAndSendToken = (user, statusCode, res) => {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
-    secure: false,
+    secure: true,
     httpOnly: true,
   };
 
@@ -73,6 +73,14 @@ exports.login = catchAsync(async (req, res, next) => {
   //3) If everything ok, send token to client
   createAndSendToken(user, 200, res);
 });
+
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
 
 /**
  * Used in all routes that require authentication
@@ -130,34 +138,40 @@ exports.protect = catchAsync(async (req, res, next) => {
 
 /**
  * Only for rendered pages(frontend), no error
+ * We don't need to globally capture any logs (removed catchAsync), only locally
  */
 
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   if (req.cookies.jwt) {
-    //1) Verification token
-    const payload = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET,
-    );
+    try {
+      //1) Verification token
+      const payload = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET,
+      );
 
-    //2) Check if the user still exists
-    const freshUser = await User.findById(payload.id);
+      //2) Check if the user still exists
+      const freshUser = await User.findById(payload.id);
 
-    if (!freshUser) {
+      if (!freshUser) {
+        return next();
+      }
+
+      //3) Check if the user changed password after the token was issued
+      if (freshUser.changedPasswordAfter(payload.iat)) {
+        return next();
+      }
+
+      //There is a logged in user
+      res.locals.user = freshUser;
+      return next();
+    } catch (error) {
+      //JWT token contained in the cookie is not valid
       return next();
     }
-
-    //3) Check if the user changed password after the token was issued
-    if (freshUser.changedPasswordAfter(payload.iat)) {
-      return next();
-    }
-
-    //There is a logged in user
-    res.locals.user = freshUser;
-    return next();
   }
   next();
-});
+};
 
 /**
  * The middlewares do not accept arguments(must be req, res, next) but we need to pass the

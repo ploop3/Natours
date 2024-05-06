@@ -10,8 +10,10 @@ const authController = require('../controllers/authController');
 const router = express.Router();
 
 //These routes do not require authentication
+//TODO: /login should be accessed only if there's no user logged in
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
+router.get('/logout', authController.logout);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
