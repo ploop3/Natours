@@ -18,5 +18,11 @@ EMAIL_PORT=
 
 ##  Run the app
 
+### Install dependencies
 `npm install`
+
+### Generate libs bundle with parcel
+`npm run build:js`
+
+### Start the app
 `npm start`
