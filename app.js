@@ -62,6 +62,8 @@ app.use(
     limit: '10kb',
   }),
 );
+//Needed to parse data coming from an urlencoded "form"
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 //cookieParser will add the cookies into req.cookies
 app.use(cookieParser());

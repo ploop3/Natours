@@ -133,6 +133,10 @@ exports.protect = catchAsync(async (req, res, next) => {
   //We create a new property 'user' in the req object and the next middleware will receive this
   //modified request object
   req.user = freshUser;
+
+  //In our middlewares, we can use `.locals` to add variables
+  //that will be accesible by our pug templates.
+  res.locals.user = freshUser;
   next();
 });
 
