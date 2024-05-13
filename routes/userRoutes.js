@@ -23,7 +23,11 @@ router.use(authController.protect);
 
 router.patch('/updateMyPassword', authController.updatePassword);
 router.get('/me', userController.getMe, userController.getUser);
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.updateMe,
+);
 router.delete('/deleteMe', userController.deleteMe);
 
 //All routes after this point not only require authentication but also are restricted to admins
