@@ -1,21 +1,27 @@
 const multer = require('multer');
+const sharp = require('sharp');
 
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handleFactory');
 
-const multerStorage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, 'public/img/users');
-  },
-  filename: (req, file, cb) => {
-    //user-id-timestamp.jpg
-    const ext = file.mimetype.split('/')[1];
-    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
-  },
-});
+//Choose where and how are the files stored
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, callback) => {
+//     callback(null, 'public/img/users');
+//   },
+//   filename: (req, file, cb) => {
+//     //user-id-timestamp.jpg
+//     const ext = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//   },
+// });
 
+//Since we will manipulate the image, no need to store it in disk yet
+const multerStorage = multer.memoryStorage(); //req.file.buffer
+
+//Allow only images to upload
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
@@ -33,6 +39,20 @@ const upload = multer({
  * Upload user photo middleware
  */
 exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+};
 
 /**
  *
