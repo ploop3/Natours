@@ -22,9 +22,14 @@ if (loginForm) {
 if (userDataForm) {
   userDataForm.addEventListener('submit', (evt) => {
     evt.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    updateSettings({ name, email }, 'data');
+    //Recreate form for multipart/form-data, so we can include the photo
+    const form = new FormData();
+
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+
+    updateSettings(form, 'data');
   });
 }
 if (userPasswordForm) {
