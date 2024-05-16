@@ -1,11 +1,81 @@
+const multer = require('multer');
+const sharp = require('sharp');
+
 const Tour = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handleFactory');
 
+//Save file on memory
+const multerStorage = multer.memoryStorage(); //req.file.buffer
+
+//Allow only images to upload
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images', 404), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
 /**
  * Route handlers
  */
+
+/**
+ * Multer .fields can be used to upload one, or many files
+ * Instead of:
+ *
+ * upload.single('image')
+ * upload.array('images', 3)
+ */
+exports.uploadTourImages = upload.fields([
+  {
+    name: 'imageCover',
+    maxCount: 1,
+  },
+  {
+    name: 'images',
+    maxCount: 3,
+  },
+]);
+
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  //1. process cover image
+  //So it's picked up by the upload to DB function: this.uploadTourImages()
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  //2. Process the rest of images
+  req.body.images = []; //For this.uploadTourImages()
+
+  const promisesArray = req.files.images.map(async (file, index) => {
+    const filename = `tour-${req.params.id}-${Date.now()}-${index + 1}.jpeg`;
+
+    await sharp(file.buffer)
+      .resize(2000, 1333)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toFile(`public/img/tours/${filename}`);
+
+    req.body.images.push(filename);
+  });
+  await Promise.all(promisesArray);
+
+  next();
+});
 
 //Middleware for the top 5 best cheapest tours
 exports.aliasTopTours = (req, res, next) => {
