@@ -15,6 +15,7 @@ EMAIL_USERNAME=
 EMAIL_PASSWORD=
 EMAIL_HOST=...mailtrap.io
 EMAIL_PORT=
+EMAIL_FROM='noreply@company.com'
 
 ##  Run the app
 
