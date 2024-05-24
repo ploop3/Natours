@@ -7,6 +7,8 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
+const cors = require('cors');
 
 const globalErrorHandler = require('./controllers/errorController');
 const AppError = require('./utils/appError');
@@ -20,12 +22,25 @@ const viewRouter = require('./routes/viewRoutes');
 //Will add a bunch of methods to our app variable
 const app = express();
 
+//Trust proxy servers (usually used by deployment services)
+app.set('trust proxy', 1);
+
 //Frontend: Template engine pug
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 // 1) GLOBAL Middlewares
+
+//Implement CORS
+//Simple requests:
+app.use(cors());
+
+//CORS rest of requests(DELETE, PATCH...)
+//options is an HTTP method, just like GET POST
+app.options('*', cors());
+
 //Serving static files
+// --> res.header('Access-Control-Allow-Origin', *)
 app.use(express.static(path.join(__dirname, 'public')));
 
 //Set security HTTP headers
@@ -90,6 +105,9 @@ app.use(
     ],
   }),
 );
+
+//Compress(zlib) response text bodies
+app.use(compression());
 
 // 2) ROUTES
 //Mount view routes to the app
