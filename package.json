@@ -19,7 +19,7 @@
     "start:dev": "nodemon server.js",
     "start:prod": "NODE_ENV=production nodemon server.js",
     "watch:js": "parcel watch ./public/js/index.js --target myFrontend",
-    "build:js": "parcel build ./public/js/index.js --target myFrontend"
+    "build": "parcel build ./public/js/index.js --target myFrontend"
   },
   "author": "Pedro",
   "license": "ISC",

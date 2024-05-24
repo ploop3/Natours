@@ -9,6 +9,11 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AZURE_WEBAPP_NAME: hickingtours # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: 'my-app-path'
+  NODE_VERSION: '20.x'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,9 +22,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: npm install, build, and test
         run: |
@@ -31,10 +36,11 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: node-app
           path: release.zip
+          overwrite: true
 
   deploy:
     runs-on: ubuntu-latest
@@ -42,30 +48,21 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: node-app
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_033C59F309094A1CACD4F02AFDA1F12F }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_91DC630D3D114C7790C1F4321BB043BA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_45226B6ADCC04E5788BAB059FC276D79 }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'hickingtours'
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: 'Production'
           package: .
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C3F086D336A64A2EA1DB6E7B89EB5AB2 }}
