@@ -164,10 +164,12 @@ tourSchema.pre(/^find/, function (next) {
 });
 
 tourSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: 'guides',
-    select: '-__v -passwordChangedAt',
-  });
+  if (this.guides) {
+    this.populate({
+      path: 'guides',
+      select: '-__v -passwordChangedAt',
+    });
+  }
   next();
 });
 
