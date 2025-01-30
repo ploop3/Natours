@@ -46,8 +46,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 //Set security HTTP headers
 app.use(
   helmet({
-    contentSecurityPolicy:
-      process.env.NODE_ENV === 'production' ? undefined : false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          '*.js.stripe.com',
+          'js.stripe.com',
+          'maps.googleapis.com',
+        ],
+        frameSrc: [
+          "'self'",
+          '*.js.stripe.com',
+          'js.stripe.com',
+          'hooks.stripe.com',
+        ],
+        childSrc: ["'self'", 'js.stripe.com'],
+        connectSrc: ["'self'", 'api.stripe.com', 'maps.googleapis.com'],
+      },
+    },
   }),
 );
 
